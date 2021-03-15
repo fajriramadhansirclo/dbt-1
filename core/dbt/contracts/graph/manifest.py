@@ -677,6 +677,8 @@ class Manifest(MacroMethods):
         # only have the node name in the patch, we have to iterate over all the
         # nodes looking for matching names. We could use a NameSearcher if we
         # were ok with doing an O(n*m) search (one nodes scan per patch)
+        # Q: could we convert between names and node ids? or same a mapping?
+        # Q: Why don't we compare differences in files and loop through that?
         for node in self.nodes.values():
             patch = patches.pop(node.name, None)
             if not patch:
@@ -717,19 +719,6 @@ class Manifest(MacroMethods):
         return frozenset(
             x.database for x in
             chain(self.nodes.values(), self.sources.values())
-        )
-
-    def deepcopy(self):
-        return Manifest(
-            nodes={k: _deepcopy(v) for k, v in self.nodes.items()},
-            sources={k: _deepcopy(v) for k, v in self.sources.items()},
-            macros={k: _deepcopy(v) for k, v in self.macros.items()},
-            docs={k: _deepcopy(v) for k, v in self.docs.items()},
-            exposures={k: _deepcopy(v) for k, v in self.exposures.items()},
-            selectors=self.root_project.manifest_selectors,
-            metadata=self.metadata,
-            disabled=[_deepcopy(n) for n in self.disabled],
-            files={k: _deepcopy(v) for k, v in self.files.items()},
         )
 
     def writable_manifest(self):

@@ -3,7 +3,7 @@ from dataclasses import field
 import os
 import pickle
 from typing import (
-    Dict, Optional, Mapping, Callable, Any, List, Type, Union, MutableMapping
+    Dict, Optional, Mapping, Callable, Any, List, Type, Union
 )
 import time
 
@@ -177,6 +177,8 @@ class ManifestLoader:
             ),
         })
 
+    # This is where we use the partial-parse state from the
+    # pickle file (if it exists)
     def parse_with_cache(
         self,
         path: FilePath,
@@ -275,7 +277,9 @@ class ManifestLoader:
 
     # This is where the main action happens
     def load(self, macro_manifest: MacroManifest):
-        # if partial parse is enabled, load old results
+        # If partial parse is enabled, load old results
+        # This is the second time it's loaded; it was
+        # previously loaded to get the macros.
         old_results = self.read_parse_results()
         if old_results is not None:
             logger.debug('Got an acceptable cached parse result')
@@ -401,12 +405,8 @@ class ManifestLoader:
         for value in self.results.disabled.values():
             disabled.extend(value)
 
-        nodes: MutableMapping[str, ManifestNode] = {
-            k: v for k, v in self.results.nodes.items()
-        }
-
         manifest = Manifest(
-            nodes=nodes,
+            nodes=self.results.nodes,  # type: ignore
             sources=sources,
             macros=self.results.macros,
             docs=self.results.docs,

@@ -194,6 +194,7 @@ class ParseResult(dbtClassMixin, Writable, Replaceable):
             if n.original_file_path == match_file.path.original_file_path
         ]
 
+    # This is only used by 'sanitized_update' which processes "old_results"
     def _process_node(
         self,
         node_id: str,
@@ -228,15 +229,16 @@ class ParseResult(dbtClassMixin, Writable, Replaceable):
                 .format(node_id, old_file)
             )
 
+    # This is called by ManifestLoader._get_cached/parse_with_cache,
+    # which handles updating the ManifestLoader results with information
+    # from the "old_result", i.e. the pickle file.
     def sanitized_update(
         self,
         source_file: SourceFile,
         old_result: 'ParseResult',
         resource_type: NodeType,
     ) -> bool:
-        """Perform a santized update. If the file can't be updated, invalidate
-        it and return false.
-        """
+
         if isinstance(source_file.path, RemoteFile):
             return False
 
