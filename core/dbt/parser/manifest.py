@@ -431,6 +431,7 @@ class ManifestLoader:
 
     @classmethod
     def get_full_manifest(
+        cls,
         config: RuntimeConfig,
         *,
         reset: bool = False,
