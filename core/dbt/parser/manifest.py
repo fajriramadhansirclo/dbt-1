@@ -12,6 +12,7 @@ import dbt.tracking
 import dbt.flags as flags
 
 from dbt.adapters.factory import (
+    get_adapter,
     get_relation_class_by_name,
 )
 from dbt.helper_types import PathSet
@@ -426,6 +427,32 @@ class ManifestLoader:
         )
 
         return manifest
+
+
+    @classmethod
+    def get_full_manifest(
+        config: RuntimeConfig,
+        *,
+        reset: bool = False,
+    ) -> Manifest:
+        """Load the full manifest, using the adapter's internal manifest if it
+        exists to skip parsing internal (dbt + plugins) macros a second time.
+
+        Also, make sure that we force-laod the adapter's manifest, so it gets
+        attached to the adapter for any methods that need it.
+        """
+        adapter = get_adapter(config)  # type: ignore
+        if reset:
+            config.clear_dependencies()
+            adapter.clear_macro_manifest()
+
+        macro_manifest: MacroManifest = adapter.load_macro_manifest()
+
+        return load_manifest(
+            config,
+            macro_manifest,
+            adapter.connections.set_query_header,
+        )
 
     @classmethod
     def load_all(
